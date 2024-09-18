@@ -9,7 +9,7 @@
 * RewardDistributor: https://etherscan.io/address/0xbE23BB6D817C08E7EC4Cd0adB0E23156189c1bA9
 
 # Conducted audits:
-## Audit #2 June-August, 2024. 
+## Audit #2 July-August, 2024. 
 ### Audit scope: 
 * wstUSR (ERC20)
 ### Audit reports:
