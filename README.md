@@ -9,6 +9,16 @@
 * RewardDistributor: https://etherscan.io/address/0xbE23BB6D817C08E7EC4Cd0adB0E23156189c1bA9
 
 # Conducted audits:
+## Audit #3 August-September, 2024. 
+### Audit scope: 
+* Treasury
+* AaveV3TreasuryConnector
+* LidoTreasuryConnector
+* LPExternalRequestsManager
+* ExternalRequestsManager
+### Audit reports:
+* TBA
+
 ## Audit #2 July-August, 2024. 
 ### Audit scope: 
 * wstUSR (ERC20)
