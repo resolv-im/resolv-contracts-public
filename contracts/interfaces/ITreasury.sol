@@ -27,6 +27,11 @@ interface ITreasury is IDefaultErrors {
     event AaveWithdrawn(bytes32 indexed _idempotencyKey, address indexed _token, uint256 _amount);
     event AaveReferralCodeSet(uint16 _aaveReferralCode);
     event AaveTreasuryConnectorSet(address indexed _aaveTreasuryConnector);
+    event DineroDeposited(bytes32 indexed _idempotencyKey, uint256 _amount, uint256 _pxETHPostFeeAmount, uint256 _feeAmount, uint256 _apxETHAmount);
+    event DineroInitiatedRedemption(bytes32 indexed _idempotencyKey, uint256 _apxETHAmount, uint256 _pxETHPostFeeAmount, uint256 _feeAmount);
+    event DineroInstantRedeemed(bytes32 indexed _idempotencyKey, uint256 _apxETHAmount, uint256 _pxETHPostFeeAmount, uint256 _feeAmount);
+    event DineroRedeemed(bytes32 indexed _idempotencyKey, uint256[] _upxETHTokenIds);
+    event DineroTreasuryConnectorSet(address indexed _dineroTreasuryConnector);
 
     error InsufficientFunds();
     error OperationLimitExceeded(OperationType _operation, uint256 _amount);
@@ -36,6 +41,7 @@ interface ITreasury is IDefaultErrors {
     error InvalidSpenderWhitelist(address _spenderWhitelist);
     error InvalidLidoTreasuryConnector(address _lidoTreasuryConnector);
     error InvalidAaveTreasuryConnector(address _aaveTreasuryConnector);
+    error InvalidDineroTreasuryConnector(address _dineroTreasuryConnector);
 
     enum OperationType {
         LidoDeposit,
@@ -48,7 +54,11 @@ interface ITreasury is IDefaultErrors {
         TransferETH,
         TransferERC20,
         IncreaseAllowance,
-        DecreaseAllowance
+        DecreaseAllowance,
+        DineroDeposit,
+        DineroInitiateRedemption,
+        DineroInstantRedeem,
+        DineroRedeem
     }
 
     function setOperationLimit(
@@ -59,6 +69,10 @@ interface ITreasury is IDefaultErrors {
     function setRecipientWhitelist(address _recipientWhitelist) external;
 
     function setRecipientWhitelistEnabled(bool _isEnabled) external;
+
+    function setSpenderWhitelistEnabled(bool _isEnabled) external;
+
+    function setSpenderWhitelist(address _spenderWhitelist) external;
 
     function pause() external;
 
@@ -164,5 +178,25 @@ interface ITreasury is IDefaultErrors {
 
     function setAaveReferralCode(
         uint16 _aaveReferralCode
+    ) external;
+
+    function dineroDeposit(
+        bytes32 _idempotencyKey,
+        uint256 _amount
+    ) external returns (uint256 pxETHPostFeeAmount, uint256 feeAmount, uint256 apxETHAmount);
+
+    function dineroInitiateRedemption(
+        bytes32 _idempotencyKey,
+        uint256 _apxETHAmount
+    ) external returns (uint256 pxETHPostFeeAmount, uint256 feeAmount);
+
+    function dineroInstantRedeemWithApxEth(
+        bytes32 _idempotencyKey,
+        uint256 _apxETHAmount
+    ) external returns (uint256 pxETHPostFeeAmount, uint256 feeAmount);
+
+    function dineroRedeem(
+        bytes32 _idempotencyKey,
+        uint256[] calldata _upxETHTokenIds
     ) external;
 }
