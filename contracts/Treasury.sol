@@ -10,6 +10,7 @@ import {ILidoTreasuryConnector} from "./interfaces/ILidoTreasuryConnector.sol";
 import {IAaveTreasuryConnector} from "./interfaces/IAaveTreasuryConnector.sol";
 import {ITreasury} from "./interfaces/ITreasury.sol";
 import {IAddressesWhitelist} from "./interfaces/IAddressesWhitelist.sol";
+import {IDineroTreasuryConnector} from "./interfaces/IDineroTreasuryConnector.sol";
 
 contract Treasury is ITreasury, AccessControlDefaultAdminRulesUpgradeable, PausableUpgradeable {
 
@@ -18,12 +19,15 @@ contract Treasury is ITreasury, AccessControlDefaultAdminRulesUpgradeable, Pausa
 
     bytes32 public constant SERVICE_ROLE = keccak256("SERVICE_ROLE");
     IERC20 public constant WST_ETH = IERC20(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
+    IERC20 public constant APX_ETH = IERC20(0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6);
 
     address public lidoReferralCode;
     ILidoTreasuryConnector public lidoTreasuryConnector;
 
     uint16 public aaveReferralCode;
     IAaveTreasuryConnector public aaveTreasuryConnector;
+
+    IDineroTreasuryConnector public dineroTreasuryConnector;
 
     IAddressesWhitelist public recipientWhitelist;
     bool public isRecipientWhitelistEnabled;
@@ -64,6 +68,7 @@ contract Treasury is ITreasury, AccessControlDefaultAdminRulesUpgradeable, Pausa
     function initialize(
         address _lidoTreasuryConnector,
         address _aaveTreasuryConnector,
+        address _dineroTreasuryConnector,
         address _recipientWhitelist,
         address _spenderWhitelist
     ) public initializer {
@@ -80,6 +85,9 @@ contract Treasury is ITreasury, AccessControlDefaultAdminRulesUpgradeable, Pausa
         operationLimits[OperationType.TransferERC20] = type(uint256).max;
         operationLimits[OperationType.IncreaseAllowance] = type(uint256).max;
         operationLimits[OperationType.DecreaseAllowance] = type(uint256).max;
+        operationLimits[OperationType.DineroDeposit] = type(uint256).max;
+        operationLimits[OperationType.DineroInitiateRedemption] = type(uint256).max;
+        operationLimits[OperationType.DineroInstantRedeem] = type(uint256).max;
 
         _assertNonZero(_lidoTreasuryConnector);
         lidoTreasuryConnector = ILidoTreasuryConnector(_lidoTreasuryConnector);
@@ -88,6 +96,9 @@ contract Treasury is ITreasury, AccessControlDefaultAdminRulesUpgradeable, Pausa
         _assertNonZero(_aaveTreasuryConnector);
         aaveTreasuryConnector = IAaveTreasuryConnector(_aaveTreasuryConnector);
         aaveReferralCode = 0;
+
+        _assertNonZero(_dineroTreasuryConnector);
+        dineroTreasuryConnector = IDineroTreasuryConnector(_dineroTreasuryConnector);
 
         _assertNonZero(_recipientWhitelist);
         recipientWhitelist = IAddressesWhitelist(_recipientWhitelist);
@@ -428,6 +439,77 @@ contract Treasury is ITreasury, AccessControlDefaultAdminRulesUpgradeable, Pausa
         aaveReferralCode = _aaveReferralCode;
 
         emit AaveReferralCodeSet(_aaveReferralCode);
+    }
+
+    function dineroDeposit(
+        bytes32 _idempotencyKey,
+        uint256 _amount
+    ) external onlyRole(SERVICE_ROLE) idempotent(OperationType.DineroDeposit, _idempotencyKey) whenNotPaused
+    returns (uint256 pxETHPostFeeAmount, uint256 feeAmount, uint256 apxETHAmount) {
+        _assertNonZero(_amount);
+        _assertSufficientFunds(_amount);
+        _assertOperationLimit(OperationType.DineroDeposit, _amount);
+
+        // slither-disable-next-line arbitrary-send-eth
+        (pxETHPostFeeAmount, feeAmount, apxETHAmount) = dineroTreasuryConnector.deposit{value: _amount}();
+
+        emit DineroDeposited(_idempotencyKey, _amount, pxETHPostFeeAmount, feeAmount, apxETHAmount);
+
+        return (pxETHPostFeeAmount, feeAmount, apxETHAmount);
+    }
+
+    function dineroInitiateRedemption(
+        bytes32 _idempotencyKey,
+        uint256 _apxETHAmount
+    ) external onlyRole(SERVICE_ROLE) idempotent(OperationType.DineroInitiateRedemption, _idempotencyKey) whenNotPaused
+    returns (uint256 pxETHPostFeeAmount, uint256 feeAmount) {
+        _assertNonZero(_apxETHAmount);
+        _assertOperationLimit(OperationType.DineroInitiateRedemption, _apxETHAmount);
+
+        APX_ETH.safeIncreaseAllowance(address(dineroTreasuryConnector), _apxETHAmount);
+
+        (pxETHPostFeeAmount, feeAmount) = dineroTreasuryConnector.initiateRedemption(_apxETHAmount);
+
+        emit DineroInitiatedRedemption(_idempotencyKey, _apxETHAmount, pxETHPostFeeAmount, feeAmount);
+
+        return (pxETHPostFeeAmount, feeAmount);
+    }
+
+    function dineroInstantRedeemWithApxEth(
+        bytes32 _idempotencyKey,
+        uint256 _apxETHAmount
+    ) external onlyRole(SERVICE_ROLE) idempotent(OperationType.DineroInstantRedeem, _idempotencyKey) whenNotPaused
+    returns (uint256 pxETHPostFeeAmount, uint256 feeAmount) {
+        _assertNonZero(_apxETHAmount);
+        _assertOperationLimit(OperationType.DineroInstantRedeem, _apxETHAmount);
+
+        APX_ETH.safeIncreaseAllowance(address(dineroTreasuryConnector), _apxETHAmount);
+
+        (pxETHPostFeeAmount, feeAmount) = dineroTreasuryConnector.instantRedeemWithApxEth(_apxETHAmount);
+
+        emit DineroInstantRedeemed(_idempotencyKey, _apxETHAmount, pxETHPostFeeAmount, feeAmount);
+
+        return (pxETHPostFeeAmount, feeAmount);
+    }
+
+    function dineroRedeem(
+        bytes32 _idempotencyKey,
+        uint256[] calldata _upxETHTokenIds
+    ) external onlyRole(SERVICE_ROLE) idempotent(OperationType.DineroRedeem, _idempotencyKey) whenNotPaused {
+        dineroTreasuryConnector.redeem(_upxETHTokenIds);
+
+        emit DineroRedeemed(_idempotencyKey, _upxETHTokenIds);
+    }
+
+    function setDineroTreasuryConnector(
+        address _dineroTreasuryConnector
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _assertNonZero(_dineroTreasuryConnector);
+        if (_dineroTreasuryConnector.code.length == 0) revert InvalidDineroTreasuryConnector(_dineroTreasuryConnector);
+
+        dineroTreasuryConnector = IDineroTreasuryConnector(_dineroTreasuryConnector);
+
+        emit DineroTreasuryConnectorSet(_dineroTreasuryConnector);
     }
 
     function _assertOperationLimit(OperationType _operation, uint256 _amount) internal view {
