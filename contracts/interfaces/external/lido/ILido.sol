@@ -15,6 +15,9 @@ interface ILido {
 
     function sharesOf(address _account) external view returns (uint256 stETHAmount);
 
+    // solhint-disable-next-line ordering
     function submit(address _referral) external payable returns (uint256 stETHAmount);
+
+    function transferShares(address _recipient, uint256 _sharesAmount) external returns (uint256 sharesAmount);
 
 }

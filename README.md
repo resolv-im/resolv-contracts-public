@@ -1,4 +1,4 @@
-# Deployed and verified contracts:
+# Deployed and verified key contracts:
 * USR (ERC20): https://etherscan.io/address/0x66a1e37c9b0eaddca17d3662d6c05f4decf3e110
 * RLP (ERC20): https://etherscan.io/address/0x4956b52aE2fF65D74CA2d61207523288e4528f96
 * stUSR (ERC20): https://etherscan.io/address/0x6c8984bc7DBBeDAf4F6b2FD766f16eBB7d10AAb4
@@ -9,6 +9,54 @@
 * RewardDistributor: https://etherscan.io/address/0xbE23BB6D817C08E7EC4Cd0adB0E23156189c1bA9
 
 # Conducted audits:
+## Audit #8 December, 2024. 
+### Audit scope: 
+* RlpPriceStorage
+* UsrPriceStorage
+* UsrRedemptionExtension
+### Audit reports:
+* [MixBytes](https://github.com/mixbytes/audits_public/tree/master/Resolv/PoR%20Oracles)
+
+## Audit #7 December, 2024. 
+### Audit scope: 
+* LidoTreasuryExtension
+### Audit reports:
+* [MixBytes](https://github.com/mixbytes/audits_public/tree/master/Resolv/Treasury%20Extension)
+
+## Audit #6 December, 2024. 
+### Audit scope: 
+* TheCounter
+* RlpPriceStorage
+* ExternalRequestsManager
+* UsrRedemptionExtension
+### Audit reports:
+* [Pashov] TODO: waiting for Pashov to add it to public repo
+
+## Audit #5 November, 2024.
+### Audit scope: 
+* AaveV3TreasuryConnector
+* AddressesWhitelist
+* DineroTreasuryConnector
+* ERC20RebasingPermitUpgradeable
+* ERC20RebasingUpgradeable
+* ExternalRequestsManager
+* LPExternalRequestsManager
+* LidoTreasuryConnector
+* RewardDistributor
+* SimpleToken
+* StUSR
+* Treasury
+* WstUSR
+### Audit reports:
+* [Sherlock](https://github.com/sherlock-protocol/sherlock-reports/blob/main/audits/2024.12.02%20-%20Final%20-%20Resolv%20Core%20Audit%20Report.pdf)
+
+## Audit #4 October, 2024. 
+### Audit scope: 
+* Treasury
+* DineroTreasuryConnector
+### Audit reports:
+* [Pashov](https://github.com/pashov/audits/blob/master/team/pdf/Resolv-security-review-October.pdf)
+
 ## Audit #3 August-September, 2024. 
 ### Audit scope: 
 * Treasury
@@ -17,7 +65,8 @@
 * LPExternalRequestsManager
 * ExternalRequestsManager
 ### Audit reports:
-* TBA
+* [Pashov](https://github.com/pashov/audits/blob/master/team/pdf/Resolv-security-review-August.pdf)
+* [MixBytes](https://github.com/mixbytes/audits_public/tree/master/Resolv/Treasury)
 
 ## Audit #2 July-August, 2024. 
 ### Audit scope: 
@@ -34,5 +83,5 @@
 * USR/RLP request manager
 * RewardDistributor
 ### Audit reports:
-* [MixBytes](https://github.com/mixbytes/audits_public/tree/master/Resolv)
+* [MixBytes](https://github.com/mixbytes/audits_public/tree/master/Resolv/stUSR)
 * [Pessimistic](https://github.com/pessimistic-io/audits/blob/main/Resolv%20Security%20Analysis%20by%20Pessimistic.pdf)
